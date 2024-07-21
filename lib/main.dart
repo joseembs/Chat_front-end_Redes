@@ -49,6 +49,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String rcv = "Aguardando mensagem...";
   String userCheck = "Entrar";
 
+  List<Widget> chatList = [];
+
   void _setNome(userNome) {
     setState(() {
       nome = userNome;
@@ -78,14 +80,18 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         leading: Icon(Icons.messenger),
       ),
-      body: Center(
-        child: Column(
-          children: [
-            SizedBox(height: 50),
-            _Login(),
-            SizedBox(height: 100),
-            _buildChat(),
-          ],
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              SizedBox(height: 25),
+              _Login(),
+              Divider(height: 50),
+              _buildChat(),
+              Divider(height: 50),
+              _contactList(),
+            ],
+          ),
         ),
       ),
     );
@@ -106,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
         ),
-        SizedBox(height: 50),
+        SizedBox(height: 25),
         Text(
           'Informe seu email:',
         ),
@@ -118,26 +124,25 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
         ),
-        SizedBox(height: 50),
+        SizedBox(height: 25),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextButton(
                 onPressed: () async {
-                  url =
-                      'http://127.0.0.1:5000/api?pedido=cadastro&email='+email;
+                  url = 'http://127.0.0.1:5000/api?pedido=cadastro&email=' +
+                      email;
                   print(url);
 
                   info = await GetData(url);
                   print(info);
 
                   // var responseInfo = jsonDecode(info);
-
                 },
                 child: Text("Cadastrar usuário")),
             TextButton(
                 onPressed: () async {
-                  url = 'http://127.0.0.1:5000/api?pedido=login&email='+email;
+                  url = 'http://127.0.0.1:5000/api?pedido=login&email=' + email;
                   print(url);
 
                   info = await GetData(url);
@@ -146,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   var responseInfo = jsonDecode(info);
 
                   setState(() {
-                    if(responseInfo['cadastrado'] == true){
+                    if (responseInfo['cadastrado'] == true) {
                       userCheck = "Usuário encontrado";
                       print("foi");
                     } else {
@@ -174,10 +179,13 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
         ),
-        SizedBox(height: 50),
+        SizedBox(height: 25),
         TextButton(
             onPressed: () async {
-              url = 'http://127.0.0.1:5000/api?pedido=sendMsg&email=' + email + '&mensagem=' + msg;
+              url = 'http://127.0.0.1:5000/api?pedido=sendMsg&email=' +
+                  email +
+                  '&mensagem=' +
+                  msg;
               print(url);
 
               info = await GetData(url);
@@ -192,15 +200,58 @@ class _MyHomePageState extends State<MyHomePage> {
               print('enviou');
             },
             child: Text("Enviar mensagem")),
-        SizedBox(height: 50),
+        SizedBox(height: 25),
         Text(rcv),
       ],
     );
   }
 
-  // Widget _getChats() {
-  //   return SizedBox();
-  // }
+  Widget _contactList() {
+    return Column(
+      children: [
+        TextButton(
+            onPressed: () async {
+              url = 'http://127.0.0.1:5000/api?pedido=atualizar';
+              print(url);
+
+              info = await GetData(url);
+              print(info);
+
+              var decodedInfo = jsonDecode(info);
+
+              chatList = [];
+
+              for (email in decodedInfo['allUsers']) {
+                setState(() {
+                  chatList.add(Padding(
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        minimumSize: Size(170, 55),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.5),
+                          side: BorderSide(color:Colors.black54, width: 2),
+                        ),
+
+                      ),
+                      onPressed: () {
+                        return;
+                      },
+                      child: Text(email),
+                    ),
+                    padding: EdgeInsets.only(bottom: 10),
+                  ));
+                });
+              }
+            },
+            child: Text("Atualizar contatos")),
+        SizedBox(height: 25),
+        Column(
+          children: chatList,
+        ),
+      ],
+    );
+  }
 
   // _getResponseJson(String urlIn) async {
   //   info = await GetData(url);
