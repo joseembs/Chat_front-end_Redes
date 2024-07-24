@@ -49,7 +49,17 @@ class _MyHomePageState extends State<MyHomePage> {
   String rcv = "Aguardando mensagem...";
   String userCheck = "Entrar";
 
-  List<Widget> chatList = [];
+  List<Widget> contactList = [];
+
+  late Map<String, List>
+      userHistory; // arquivo [email do usuario] terá vários maps, keys serão outros emails, levam a uma lista com 3 listas: quem enviou (true ou false), mensagem, se foi vista (true ou false)
+
+  void _beginHistory() {
+    userHistory["ogmailcom"]
+        ?.add([false]); // who = true -> próprio usuário enviou
+    userHistory["ogmailcom"]?.add(["oi"]);
+    userHistory["ogmailcom"]?.add([false]);
+  }
 
   void _setNome(userNome) {
     setState(() {
@@ -89,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Divider(height: 50),
               _buildChat(),
               Divider(height: 50),
-              _contactList(),
+              _buildContactList(),
             ],
           ),
         ),
@@ -168,45 +178,55 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildChat() {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Envie sua mensagem:'),
         Container(
           width: 400,
           child: TextField(
             onChanged: (String newMsg) async {
               _setMsg(newMsg);
             },
+            obscureText: true,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: "Digite sua mensagem",
+            ),
           ),
         ),
-        SizedBox(height: 25),
-        TextButton(
-            onPressed: () async {
-              url = 'http://127.0.0.1:5000/api?pedido=sendMsg&email=' +
-                  email +
-                  '&mensagem=' +
-                  msg;
-              print(url);
+        SizedBox(width: 10),
+        IconButton(
+          icon: const Icon(Icons.air),
+          onPressed: () async {
+            url = 'http://127.0.0.1:5000/api?pedido=sendMsg&email=' +
+                email +
+                '&mensagem=' +
+                msg;
+            print(url);
 
-              info = await GetData(url);
-              print(info);
+            info = await GetData(url);
+            print(info);
 
-              var responseInfo = jsonDecode(info);
+            var responseInfo = jsonDecode(info);
 
-              setState(() {
-                rcv = responseInfo['mensagem'];
-              });
+            setState(() {
+              rcv = responseInfo['mensagem'];
+            });
 
-              print('enviou');
-            },
-            child: Text("Enviar mensagem")),
-        SizedBox(height: 25),
+            userHistory["ogmailcom"]?[0].add(true);
+            userHistory["ogmailcom"]?[1].add(msg);
+            userHistory["ogmailcom"]?[2].add(true);
+
+            print('enviou');
+          },
+        ),
+        SizedBox(width: 10),
         Text(rcv),
       ],
     );
   }
 
-  Widget _contactList() {
+  Widget _buildContactList() {
     return Column(
       children: [
         TextButton(
@@ -219,20 +239,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
               var decodedInfo = jsonDecode(info);
 
-              chatList = [];
+              contactList = [];
 
               for (email in decodedInfo['allUsers']) {
                 setState(() {
-                  chatList.add(Padding(
+                  contactList.add(Padding(
                     child: TextButton(
                       style: TextButton.styleFrom(
                         minimumSize: Size(170, 55),
                         backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.5),
-                          side: BorderSide(color:Colors.black54, width: 2),
+                          side: BorderSide(color: Colors.black54, width: 2),
                         ),
-
                       ),
                       onPressed: () {
                         return;
@@ -247,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text("Atualizar contatos")),
         SizedBox(height: 25),
         Column(
-          children: chatList,
+          children: contactList,
         ),
       ],
     );
@@ -258,4 +277,49 @@ class _MyHomePageState extends State<MyHomePage> {
   //   print(info);
   //   return jsonDecode(info);
   // }
+}
+
+class ToOther {
+  late String other;
+  List<bool> who = [];
+  List<String> hist = [];
+  List<bool> seen = [];
+
+  String getJson(ToOther selfIn, String otherIn) {
+    selfIn.other = otherIn;
+    return jsonEncode(selfIn);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      other: {
+        "self": who,
+        "hist": hist,
+        "seen": seen,
+      }
+    };
+  }
+
+  void sent(String msg){
+    who.add(true);
+    hist.add(msg);
+    seen.add(true);
+  }
+
+  void rcvNotRead(String msg){
+    who.add(false);
+    hist.add(msg);
+    seen.add(false);
+  }
+
+  void rcvRead(String msg){
+    who.add(true);
+    hist.add(msg);
+    seen.add(true);
+  }
+
+  void read(int index){
+    who[index] = true;
+    seen[index] = true;
+  }
 }
