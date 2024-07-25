@@ -40,21 +40,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late String url;
-  late var info;
-
   String nome = "";
   String email = "";
   String msg = "";
   String rcv = "Aguardando mensagem...";
   String userCheck = "Entrar";
+  String emailUserAtual = "erro";
+  late Chat usuarioAtual;
 
   List<Widget> contactList = [];
+  List<Widget> msgBoxHistory = [];
 
   late Map<String, List>
       userHistory; // arquivo [email do usuario] terá vários maps, keys serão outros emails, levam a uma lista com 3 listas: quem enviou (true ou false), mensagem, se foi vista (true ou false)
 
-  void _beginHistory() {
+  void _createUserVars() {
     userHistory["ogmailcom"]
         ?.add([false]); // who = true -> próprio usuário enviou
     userHistory["ogmailcom"]?.add(["oi"]);
@@ -140,35 +140,34 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             TextButton(
                 onPressed: () async {
-                  url = 'http://127.0.0.1:5000/api?pedido=cadastro&email=' +
-                      email;
-                  print(url);
+                  var payload = {"pedido": "cadastro", "email": email};
 
-                  info = await GetData(url);
+                  var info = await toFromServer(payload);
                   print(info);
 
-                  // var responseInfo = jsonDecode(info);
+                  if(info['cadastrado'] == true){
+                    print("email já cadastrado");
+                  } // TODO api tem que criar os arquivos com o email informado
                 },
                 child: Text("Cadastrar usuário")),
             TextButton(
                 onPressed: () async {
-                  url = 'http://127.0.0.1:5000/api?pedido=login&email=' + email;
-                  print(url);
+                  var payload = {"pedido": "login", "email": email};
 
-                  info = await GetData(url);
+                  var info = await toFromServer(payload);
                   print(info);
 
-                  var responseInfo = jsonDecode(info);
-
                   setState(() {
-                    if (responseInfo['cadastrado'] == true) {
+                    if (info['cadastrado'] == true) {
                       userCheck = "Usuário encontrado";
+                      emailUserAtual = email;
                       print("foi");
                     } else {
                       userCheck = "Usuário não existe";
                       print("não foi");
                     }
                   });
+
                 },
                 child: Text(userCheck)),
           ],
@@ -178,52 +177,102 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildChat() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        Container(
-          width: 400,
-          child: TextField(
-            onChanged: (String newMsg) async {
-              _setMsg(newMsg);
-            },
-            obscureText: true,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: "Digite sua mensagem",
+        _cascadingMsgs(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 400,
+              child: TextField(
+                onChanged: (String newMsg) async {
+                  _setMsg(newMsg);
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Digite sua mensagem",
+                ),
+              ),
             ),
-          ),
+            SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(Icons.air),
+              onPressed: () async {
+                var payload = {
+                  "pedido": "sendMsg",
+                  "email": email, //TODO adicionar email para quem enviou
+                  "mensagem": msg
+                };
+
+                var info = await toFromServer(payload);
+                print(info);
+
+                setState(() {
+                  rcv = info['mensagem']!;
+                });
+
+                // userHistory["ogmailcom"]?[0].add(true);
+                userHistory["ogmailcom"]?[1].add(msg);
+                userHistory["ogmailcom"]?[2].add(true);
+
+                print('enviou');
+              },
+            ),
+            SizedBox(width: 10),
+            Text(rcv),
+          ],
         ),
-        SizedBox(width: 10),
-        IconButton(
-          icon: const Icon(Icons.air),
-          onPressed: () async {
-            url = 'http://127.0.0.1:5000/api?pedido=sendMsg&email=' +
-                email +
-                '&mensagem=' +
-                msg;
-            print(url);
-
-            info = await GetData(url);
-            print(info);
-
-            var responseInfo = jsonDecode(info);
-
-            setState(() {
-              rcv = responseInfo['mensagem'];
-            });
-
-            userHistory["ogmailcom"]?[0].add(true);
-            userHistory["ogmailcom"]?[1].add(msg);
-            userHistory["ogmailcom"]?[2].add(true);
-
-            print('enviou');
-          },
-        ),
-        SizedBox(width: 10),
-        Text(rcv),
       ],
     );
+  }
+
+  Widget _cascadingMsgs() {
+    return Column(children: msgBoxHistory);
+  }
+
+  getMsgHist(String emailOutro) async {
+    var payload = {
+      "pedido": "getHistorico",
+      "proprio": emailUserAtual,
+      "outro": emailOutro
+    };
+
+    Map<String, String> info = await toFromServer(payload);
+
+    setState(() {
+      msgBoxHistory = [];
+    });
+
+    for (int i = 0; i < int.tryParse(info['quant']!)!; i++) {
+      setState(() {
+        if (info['who']?[i] == emailUserAtual) { //usuario atual mandou
+          msgBoxHistory.add(
+            Padding(
+              padding: EdgeInsets.only(bottom: 5),
+              child: Container(
+                child: Text(
+                    info['hist']![i]
+                ),
+                decoration: BoxDecoration(color: Colors.blue),
+              ),
+            ),
+          );
+        } else { // outro mandou
+          msgBoxHistory.add(
+            Padding(
+              padding: EdgeInsets.only(bottom: 5),
+              child: Container(
+                child: Text(
+                    info['who']![i] + ": " + info['hist']![i]
+                ),
+                decoration: BoxDecoration(color: Colors.green),
+              ),
+            ),
+          );
+        }
+      });
+    }
   }
 
   Widget _buildContactList() {
@@ -231,19 +280,16 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         TextButton(
             onPressed: () async {
-              url = 'http://127.0.0.1:5000/api?pedido=atualizar';
-              print(url);
+              var payload = {"pedido": "atualizar"};
 
-              info = await GetData(url);
-              print(info);
-
-              var decodedInfo = jsonDecode(info);
+              var info = await toFromServer(payload);
 
               contactList = [];
 
-              for (email in decodedInfo['allUsers']) {
+              for (String emailInfo in (info['allUsers'] as List<String>)) {
                 setState(() {
                   contactList.add(Padding(
+                    padding: EdgeInsets.only(bottom: 10),
                     child: TextButton(
                       style: TextButton.styleFrom(
                         minimumSize: Size(170, 55),
@@ -254,11 +300,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       onPressed: () {
-                        return;
+                        getMsgHist(emailInfo);
                       },
-                      child: Text(email),
+                      child: Text(emailInfo),
                     ),
-                    padding: EdgeInsets.only(bottom: 10),
                   ));
                 });
               }
@@ -271,21 +316,17 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
   }
-
-  // _getResponseJson(String urlIn) async {
-  //   info = await GetData(url);
-  //   print(info);
-  //   return jsonDecode(info);
-  // }
 }
 
-class ToOther {
+class Chat {
   late String other;
-  List<bool> who = [];
+  int quant = 0;
+  List<String> members = [];
+  List<String> who = [];
   List<String> hist = [];
   List<bool> seen = [];
 
-  String getJson(ToOther selfIn, String otherIn) {
+  String getJson(Chat selfIn, String otherIn) {
     selfIn.other = otherIn;
     return jsonEncode(selfIn);
   }
@@ -293,33 +334,34 @@ class ToOther {
   Map<String, dynamic> toJson() {
     return {
       other: {
-        "self": who,
+        "quant": quant,
+        "members": members,
+        "who": who,
         "hist": hist,
         "seen": seen,
       }
     };
   }
 
-  void sent(String msg){
-    who.add(true);
+  void sent(String selfName, String msg) {
+    who.add(selfName);
     hist.add(msg);
     seen.add(true);
   }
 
-  void rcvNotRead(String msg){
-    who.add(false);
+  void rcvNotRead(String other, String msg) {
+    who.add(other);
     hist.add(msg);
     seen.add(false);
   }
 
-  void rcvRead(String msg){
-    who.add(true);
+  void rcvRead(String other, String msg) {
+    who.add(other);
     hist.add(msg);
     seen.add(true);
   }
 
-  void read(int index){
-    who[index] = true;
+  void read(int index) {
     seen[index] = true;
   }
 }
