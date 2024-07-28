@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'API.dart';
 
 void main() {
@@ -15,12 +17,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Whatsapp2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
@@ -40,47 +41,24 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String nome = "";
-  String email = "";
+  String nomeSignIn = "";
+  String emailSignIn = "";
+  String localSignIn = "";
+  String nomeLogin = "";
+  String emailLogin = "";
   String msg = "";
   String rcv = "Aguardando mensagem...";
-  String userCheck = "Entrar";
   String emailUserAtual = "erro";
-  late Chat usuarioAtual;
+  String toName = "erro";
 
-  List<Widget> contactList = [];
+  bool isGroup = false;
+
+  List<Widget> contactDmList = [];
+  List<Widget> contactGrList = [];
   List<Widget> msgBoxHistory = [];
 
   late Map<String, List>
       userHistory; // arquivo [email do usuario] terá vários maps, keys serão outros emails, levam a uma lista com 3 listas: quem enviou (true ou false), mensagem, se foi vista (true ou false)
-
-  void _createUserVars() {
-    userHistory["ogmailcom"]
-        ?.add([false]); // who = true -> próprio usuário enviou
-    userHistory["ogmailcom"]?.add(["oi"]);
-    userHistory["ogmailcom"]?.add([false]);
-  }
-
-  void _setNome(userNome) {
-    setState(() {
-      nome = userNome;
-      print(nome);
-    });
-  }
-
-  void _setEmail(userEmail) {
-    setState(() {
-      email = userEmail;
-      print(email);
-    });
-  }
-
-  void _setMsg(userMsg) {
-    setState(() {
-      msg = userMsg;
-      print(msg);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,96 +68,387 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
         leading: Icon(Icons.messenger),
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              SizedBox(height: 25),
-              _Login(),
-              Divider(height: 50),
-              _buildChat(),
-              Divider(height: 50),
-              _buildContactList(),
-            ],
-          ),
+      body: _body(),
+    );
+  }
+
+  Widget _body() {
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          children: [
+            SizedBox(height: 25),
+            _mainMenu(),
+            Divider(height: 50),
+            _contactList(),
+            Divider(height: 50),
+            _chatBox(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _Login() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(
-          'Informe seu nome:',
-        ),
-        Container(
-          width: 200,
-          child: TextField(
-            onChanged: (String newNome) async {
-              _setNome(newNome);
-            },
+  Widget _mainMenu() {
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [_cadastro(), _login()],
+    );
+  }
+
+  Widget _cadastro() {
+    return Container(
+      width: 450,
+      margin: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey, width: 2),
+          borderRadius: const BorderRadius.all(Radius.circular(25))),
+      child: Column(
+        children: <Widget>[
+          const Text(
+            "Cadastro",
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF337d07)),
           ),
-        ),
-        SizedBox(height: 25),
-        Text(
-          'Informe seu email:',
-        ),
-        Container(
-          width: 200,
-          child: TextField(
-            onChanged: (String newEmail) async {
-              _setEmail(newEmail);
-            },
+          const SizedBox(height: 20),
+          //Nome
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Nome de usuário:',
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 10),
+                width: 270,
+                child: TextField(
+                  decoration: InputDecoration(isDense: true),
+                  onChanged: (String newNome) async {
+                    nomeSignIn = newNome;
+                    print(nomeSignIn);
+                  },
+                ),
+              ),
+            ],
           ),
-        ),
-        SizedBox(height: 25),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
+          const SizedBox(height: 25),
+          //Email
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'E-mail:',
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 10),
+                width: 200,
+                child: TextField(
+                  decoration: InputDecoration(isDense: true),
+                  onChanged: (String newEmail) async {
+                    emailSignIn = newEmail;
+                    print(emailSignIn);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+          //Local
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Localização:',
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 10),
+                width: 240,
+                child: TextField(
+                  decoration: InputDecoration(isDense: true),
+                  onChanged: (String newLocal) async {
+                    localSignIn = newLocal;
+                    print(localSignIn);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+          //Botão
+          TextButton(
+            style: TextButton.styleFrom(
+                backgroundColor: Color(0x6099f57d),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    side: BorderSide(color: Colors.grey, width: 2))),
+            onPressed: () async {
+              var payload = {
+                "pedido": "cadastro",
+                "email": emailSignIn,
+                "nome": nomeSignIn,
+                "local": localSignIn
+              };
+
+              // var info = await toFromServer(payload);
+              var info = {"cadastrado": true}; // teste
+              print(info);
+
+              if (info['cadastrado'] == false) {
+                print("email inválido ou já cadastrado");
+              }
+            },
+            child: Text(
+              "Cadastrar-se",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _login() {
+    return Container(
+      width: 450,
+      margin: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey, width: 2),
+          borderRadius: const BorderRadius.all(Radius.circular(25))),
+      child: Column(
+        children: <Widget>[
+          const Text(
+            "Login",
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF337d07)),
+          ),
+          const SizedBox(height: 20),
+          //Nome
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Nome de usuário:',
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 10),
+                width: 270,
+                child: TextField(
+                  decoration: InputDecoration(isDense: true),
+                  onChanged: (String newNome) async {
+                    nomeLogin = newNome;
+                    print(nomeLogin);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+          //Email
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'E-mail:',
+              ),
+              Container(
+                margin: EdgeInsets.only(left: 10),
+                width: 200,
+                child: TextField(
+                  decoration: InputDecoration(isDense: true),
+                  onChanged: (String newEmail) async {
+                    emailLogin = newEmail;
+                    // print(emailLogin);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 25),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                    backgroundColor: Color(0x6099f57d),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        side: BorderSide(color: Colors.grey, width: 2))),
                 onPressed: () async {
-                  var payload = {"pedido": "cadastro", "email": email};
+                  var payload = {"pedido": "login", "email": emailLogin};
 
                   var info = await toFromServer(payload);
+                  Future.delayed(Duration(seconds: 2));
+                  // var info = {"cadastrado": true}; // teste
                   print(info);
-
-                  if(info['cadastrado'] == true){
-                    print("email já cadastrado");
-                  } // TODO api tem que criar os arquivos com o email informado
-                },
-                child: Text("Cadastrar usuário")),
-            TextButton(
-                onPressed: () async {
-                  var payload = {"pedido": "login", "email": email};
-
-                  var info = await toFromServer(payload);
-                  print(info);
+                  //print("b");
 
                   setState(() {
                     if (info['cadastrado'] == true) {
-                      userCheck = "Usuário encontrado";
-                      emailUserAtual = email;
+                      emailUserAtual = emailLogin;
                       print("foi");
                     } else {
-                      userCheck = "Usuário não existe";
                       print("não foi");
                     }
                   });
-
                 },
-                child: Text(userCheck)),
+                child: Text("Entrar",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _contactList() {
+    return Column(
+      children: [
+        _updateButton(),
+        SizedBox(height: 25),
+        Column(
+          children: [
+            const Text(
+              "Mensagens diretas",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF337d07)),
+            ),
+            Column(children: contactDmList)
+          ],
+        ),
+        Container(
+          child: Divider(height: 50),
+          width: 500,
+        ),
+        Column(
+          children: [
+            const Text(
+              "Grupos",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF337d07)),
+            ),
+            Column(children: contactGrList)
           ],
         ),
       ],
     );
   }
 
-  Widget _buildChat() {
+  Widget _updateButton() {
+    return IconButton(
+      icon: const Icon(Icons.update, color: Color(0xFF337d07)),
+      style: TextButton.styleFrom(
+          //padding: EdgeInsets.all(15),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(60),
+              side: BorderSide(color: Colors.grey, width: 3))),
+      onPressed: () async {
+        var payload = {"pedido": "atualizar"};
+
+        //var info = await toFromServer(payload);
+
+        // var info = {
+        //   "allUsers": ["j@gmail.com"],
+        //   "allGroups": []
+        // }; // teste 1
+        var info = {
+          "allUsers": ["j@gmail.com", "o@gmail.com"],
+          "allGroups": []
+        }; // teste 2
+
+        contactDmList = [];
+
+        if (info["allUsers"]!.length > 1) {
+          for (String emailName in (info['allUsers'] as List<String>)) {
+            if (emailName != emailUserAtual) {
+              setState(() {
+                contactDmList.add(_contactButton(emailName, false));
+              });
+            }
+          }
+        }
+        contactGrList = [];
+
+        if (info["allGroups"]!.isNotEmpty) {
+          for (String groupName in (info['allGroups'] as List<String>)) {
+            setState(() {
+              contactGrList.add(_contactButton(groupName, true));
+            });
+          }
+        }
+      },
+    );
+  }
+
+  Widget _contactButton(String chatName, bool clickGroup) {
+    return Padding(
+      padding: EdgeInsets.only(top: 10),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          minimumSize: Size(170, 55),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.5),
+            side: BorderSide(color: Colors.black54, width: 2),
+          ),
+        ),
+        onPressed: () {
+          setState(() {
+            getMsgHist(chatName);
+            toName = chatName;
+            isGroup = clickGroup;
+          });
+        },
+        child: Text(chatName),
+      ),
+    );
+  }
+
+  Widget _chatBox() {
+    return Visibility(
+      visible: toName == "erro" ? false : true,
+      child: Container(
+        decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.grey, width: 2),
+            borderRadius: const BorderRadius.all(Radius.circular(25))),
+        width: 500,
+        height: 800,
+        child: Column(
+          children: [
+            Text(toName),
+            Container(
+              width: 450,
+              height: 700,
+              child: _cascadingMsgs(),
+            ),
+            _chatInput(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _cascadingMsgs() {
+    return Column(children: msgBoxHistory);
+  }
+
+  Widget _chatInput() {
     return Column(
       children: [
-        _cascadingMsgs(),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -187,7 +456,8 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 400,
               child: TextField(
                 onChanged: (String newMsg) async {
-                  _setMsg(newMsg);
+                  msg = newMsg;
+                  print(msg);
                 },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
@@ -197,124 +467,100 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(width: 10),
             IconButton(
-              icon: const Icon(Icons.air),
+              icon: const Icon(Icons.air, color: Color(0xFF337d07)),
+              style: TextButton.styleFrom(
+                  backgroundColor: Color(0x6099f57d),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(60),
+                      side: BorderSide(color: Colors.grey, width: 3))),
               onPressed: () async {
                 var payload = {
                   "pedido": "sendMsg",
-                  "email": email, //TODO adicionar email para quem enviou
-                  "mensagem": msg
+                  "nome": toName,
+                  "email": emailUserAtual,
+                  "mensagem": msg,
+                  "grupo" : isGroup
                 };
 
-                var info = await toFromServer(payload);
+                // var info = await toFromServer(payload);
+
+                var info = {"quant": 1, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com"], "hist": ["oi"]};
                 print(info);
-
-                setState(() {
-                  rcv = info['mensagem']!;
-                });
-
-                // userHistory["ogmailcom"]?[0].add(true);
-                userHistory["ogmailcom"]?[1].add(msg);
-                userHistory["ogmailcom"]?[2].add(true);
 
                 print('enviou');
               },
             ),
-            SizedBox(width: 10),
-            Text(rcv),
+            // SizedBox(width: 10),
+            // Text(rcv),
           ],
         ),
       ],
     );
   }
 
-  Widget _cascadingMsgs() {
-    return Column(children: msgBoxHistory);
-  }
+  getMsgHist(String nomeOutro) async {
+    Map<String, String> payload;
+    if (isGroup) {
+      payload = {
+        "pedido": "getGrupo",
+        "nome": nomeOutro,
+      };
+    } else {
+      payload = {
+        "pedido": "getDM",
+        "email": emailUserAtual,
+        "destinatario": nomeOutro
+      };
+    }
 
-  getMsgHist(String emailOutro) async {
-    var payload = {
-      "pedido": "getHistorico",
-      "proprio": emailUserAtual,
-      "outro": emailOutro
-    };
+    // var info = await toFromServer(payload);
 
-    Map<String, String> info = await toFromServer(payload);
+    // var info = {
+    //   "quant": 0,
+    //   "members": ["j@gmail.com", "o@gmail.com"],
+    //   "who": [],
+    //   "hist": []
+    // }; // teste 1
+
+    // var info = {"quant": 1, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com"], "hist": ["oi"]}; // teste 2
+
+    var info = {"quant": 2, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com", "o@gmail.com"], "hist": ["oi", "eae"]};
 
     setState(() {
       msgBoxHistory = [];
     });
 
-    for (int i = 0; i < int.tryParse(info['quant']!)!; i++) {
+    for (int i = 0; i < (info['quant'] as int); i++) {
       setState(() {
-        if (info['who']?[i] == emailUserAtual) { //usuario atual mandou
+        //usuario atual mandou
+        if ((info['who'] as List<String>)[i] == emailUserAtual) {
           msgBoxHistory.add(
             Padding(
               padding: EdgeInsets.only(bottom: 5),
               child: Container(
-                child: Text(
-                    info['hist']![i]
-                ),
+                width: 400,
                 decoration: BoxDecoration(color: Colors.blue),
+                child: Text((info['hist'] as List<String>)[i]),
               ),
             ),
           );
-        } else { // outro mandou
+        }
+        // outro mandou
+        else {
           msgBoxHistory.add(
             Padding(
               padding: EdgeInsets.only(bottom: 5),
               child: Container(
-                child: Text(
-                    info['who']![i] + ": " + info['hist']![i]
-                ),
+                width: 400,
                 decoration: BoxDecoration(color: Colors.green),
+                child: Text(
+                    "${(info['who'] as List<String>)[i]}: ${(info['hist'] as List<String>)[i]}"),
               ),
             ),
           );
         }
       });
     }
-  }
-
-  Widget _buildContactList() {
-    return Column(
-      children: [
-        TextButton(
-            onPressed: () async {
-              var payload = {"pedido": "atualizar"};
-
-              var info = await toFromServer(payload);
-
-              contactList = [];
-
-              for (String emailInfo in (info['allUsers'] as List<String>)) {
-                setState(() {
-                  contactList.add(Padding(
-                    padding: EdgeInsets.only(bottom: 10),
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                        minimumSize: Size(170, 55),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.5),
-                          side: BorderSide(color: Colors.black54, width: 2),
-                        ),
-                      ),
-                      onPressed: () {
-                        getMsgHist(emailInfo);
-                      },
-                      child: Text(emailInfo),
-                    ),
-                  ));
-                });
-              }
-            },
-            child: Text("Atualizar contatos")),
-        SizedBox(height: 25),
-        Column(
-          children: contactList,
-        ),
-      ],
-    );
   }
 }
 
@@ -324,7 +570,6 @@ class Chat {
   List<String> members = [];
   List<String> who = [];
   List<String> hist = [];
-  List<bool> seen = [];
 
   String getJson(Chat selfIn, String otherIn) {
     selfIn.other = otherIn;
@@ -338,7 +583,6 @@ class Chat {
         "members": members,
         "who": who,
         "hist": hist,
-        "seen": seen,
       }
     };
   }
@@ -346,22 +590,15 @@ class Chat {
   void sent(String selfName, String msg) {
     who.add(selfName);
     hist.add(msg);
-    seen.add(true);
   }
 
   void rcvNotRead(String other, String msg) {
     who.add(other);
     hist.add(msg);
-    seen.add(false);
   }
 
   void rcvRead(String other, String msg) {
     who.add(other);
     hist.add(msg);
-    seen.add(true);
-  }
-
-  void read(int index) {
-    seen[index] = true;
   }
 }
