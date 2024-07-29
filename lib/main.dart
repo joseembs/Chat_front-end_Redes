@@ -193,11 +193,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 "local": localSignIn
               };
 
-              // var info = await toFromServer(payload);
-              var info = {"cadastrado": true}; // teste
+              var info = await toFromServer(payload);
+              //var info = {"cadastrado": true}; // teste
               print(info);
 
-              if (info['cadastrado'] == false) {
+              if (info['cadastrado'] as bool == false) {
+                print("email cadastrado com sucesso");
+              } else {
                 print("email inválido ou já cadastrado");
               }
             },
@@ -286,12 +288,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   var info = await toFromServer(payload);
                   Future.delayed(Duration(seconds: 2));
-                  // var info = {"cadastrado": true}; // teste
                   print(info);
-                  //print("b");
 
                   setState(() {
-                    if (info['cadastrado'] == true) {
+                    if (info['cadastrado'] as bool == true) {
                       emailUserAtual = emailLogin;
                       print("foi");
                     } else {
@@ -358,21 +358,23 @@ class _MyHomePageState extends State<MyHomePage> {
       onPressed: () async {
         var payload = {"pedido": "atualizar"};
 
-        //var info = await toFromServer(payload);
+        var info = await toFromServer(payload);
+        print(info);
 
         // var info = {
         //   "allUsers": ["j@gmail.com"],
         //   "allGroups": []
         // }; // teste 1
-        var info = {
-          "allUsers": ["j@gmail.com", "o@gmail.com"],
-          "allGroups": []
-        }; // teste 2
+
+        // var info = {
+        //   "allUsers": ["j@gmail.com", "o@gmail.com"],
+        //   "allGroups": []
+        // }; // teste 2
 
         contactDmList = [];
 
         if (info["allUsers"]!.length > 1) {
-          for (String emailName in (info['allUsers'] as List<String>)) {
+          for (String emailName in (info['allUsers'].cast<String>())) {
             if (emailName != emailUserAtual) {
               setState(() {
                 contactDmList.add(_contactButton(emailName, false));
@@ -408,6 +410,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: () {
           setState(() {
             getMsgHist(chatName);
+            print("getMsgHist");
             toName = chatName;
             isGroup = clickGroup;
           });
@@ -482,9 +485,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   "grupo" : isGroup
                 };
 
-                // var info = await toFromServer(payload);
+                var info = await toFromServer(payload);
 
-                var info = {"quant": 1, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com"], "hist": ["oi"]};
+                //var info = {"quant": 1, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com"], "hist": ["oi"]}; // teste
                 print(info);
 
                 print('enviou');
@@ -499,6 +502,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   getMsgHist(String nomeOutro) async {
+    print(nomeOutro);
+    print(isGroup);
     Map<String, String> payload;
     if (isGroup) {
       payload = {
@@ -512,8 +517,11 @@ class _MyHomePageState extends State<MyHomePage> {
         "destinatario": nomeOutro
       };
     }
-
-    // var info = await toFromServer(payload);
+    print(payload);
+    var info = await toFromServer(payload);
+    print(payload);
+    print(info);
+    print("getMsgHist info");
 
     // var info = {
     //   "quant": 0,
@@ -524,7 +532,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // var info = {"quant": 1, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com"], "hist": ["oi"]}; // teste 2
 
-    var info = {"quant": 2, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com", "o@gmail.com"], "hist": ["oi", "eae"]};
+    // var info = {"quant": 2, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com", "o@gmail.com"], "hist": ["oi", "eae"]}; // teste 3
 
     setState(() {
       msgBoxHistory = [];
@@ -533,7 +541,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (int i = 0; i < (info['quant'] as int); i++) {
       setState(() {
         //usuario atual mandou
-        if ((info['who'] as List<String>)[i] == emailUserAtual) {
+        if ((info['who'].cast<String>())[i] == emailUserAtual) {
           msgBoxHistory.add(
             Padding(
               padding: EdgeInsets.only(bottom: 5),
