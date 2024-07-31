@@ -353,7 +353,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _createGroupBtn() {
     return TextButton(
       child: Text(
-        "Cadastrar-se",
+        "Criar grupo",
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       style: TextButton.styleFrom(
@@ -421,6 +421,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // }; // teste 2
 
         contactDmList = [];
+        contactsToGroup = [];
 
         if (info["allUsers"]!.length > 1) {
           allUsersList = info["allUsers"].cast<String>();
@@ -483,7 +484,18 @@ class _MyHomePageState extends State<MyHomePage> {
         height: 800,
         child: Column(
           children: [
-            Text(toName),
+            Container(
+              padding: EdgeInsets.only(left: 20, top: 10),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                toName,
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF337d07)),
+              ),
+            ),
+            Divider(height: 30, thickness: 2.5),
             Container(
               width: 450,
               height: 700,
@@ -553,8 +565,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   getMsgHist(String nomeOutro) async {
-    print(nomeOutro);
-    print(isGroup);
     Map<String, String> payload;
     if (isGroup) {
       payload = {
@@ -562,17 +572,11 @@ class _MyHomePageState extends State<MyHomePage> {
         "nome": nomeOutro,
       };
     } else {
-      payload = {
-        "pedido": "getDM",
-        "email": emailUserAtual,
-        "nome": nomeOutro
-      };
+      payload = {"pedido": "getDM", "email": emailUserAtual, "nome": nomeOutro};
     }
-    print(payload);
+
     var info = await toFromServer(payload);
-    print(payload);
     print(info);
-    print("getMsgHist info");
 
     setState(() {
       msgBoxHistory = [];
@@ -584,28 +588,39 @@ class _MyHomePageState extends State<MyHomePage> {
         if ((info['who'].cast<String>())[i] == emailUserAtual) {
           msgBoxHistory.add(
             Padding(
-              padding: EdgeInsets.only(bottom: 5),
-              child: Container(
-                width: 400,
-                decoration: BoxDecoration(color: Colors.blue),
-                child: Text((info['hist'].cast<String>())[i]),
-              ),
-            ),
+              //alignment: Alignment.centerRight,
+                padding: EdgeInsets.only(top: 5, left: 5, right: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(width: 80),
+                    Container(
+                      padding: EdgeInsets.all(4),
+                      decoration: BoxDecoration(color: Colors.blue),
+                      child: Text((info['hist'].cast<String>())[i], style: TextStyle(fontSize: 16)),
+                    ),
+                  ],
+                )),
           );
         }
         // outro mandou
         else {
           msgBoxHistory.add(
             Padding(
-              padding: EdgeInsets.only(bottom: 5),
-              child: Container(
-                width: 400,
+              //alignment: Alignment.centerRight,
+              padding: EdgeInsets.only(top: 5, left: 5, right: 5),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+              Container(
+                padding: EdgeInsets.all(4),
                 decoration: BoxDecoration(color: Colors.green),
-                child: Text(
-                    "${(info['who'].cast<String>())[i]}: ${(info['hist'].cast<String>())[i]}"),
+                child: Text( isGroup ?
+                        "${(info['who'].cast<String>())[i]}: ${(info['hist'].cast<String>())[i]}" : (info['hist'].cast<String>())[i], style: TextStyle(fontSize: 16))
               ),
-            ),
-          );
+                    SizedBox(width: 80),
+                  ],
+              )));
         }
       });
     }
