@@ -55,7 +55,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<Widget> contactDmList = [];
   List<Widget> contactGrList = [];
+  List<Widget> contactsToGroup = [];
   List<Widget> msgBoxHistory = [];
+
+  List<String> allUsersList = [];
 
   late Map<String, List>
       userHistory; // arquivo [email do usuario] terá vários maps, keys serão outros emails, levam a uma lista com 3 listas: quem enviou (true ou false), mensagem, se foi vista (true ou false)
@@ -339,11 +342,57 @@ class _MyHomePageState extends State<MyHomePage> {
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF337d07)),
             ),
+            _createGroupBtn(),
             Column(children: contactGrList)
           ],
         ),
       ],
     );
+  }
+
+  Widget _createGroupBtn() {
+    return TextButton(
+      child: Text(
+        "Cadastrar-se",
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      style: TextButton.styleFrom(
+          //padding: EdgeInsets.all(15),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(60),
+              side: BorderSide(color: Colors.grey, width: 3))),
+      onPressed: () async {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              actions: contactsToGroup,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _addToGroup(String emailName) {
+    bool? isChecked = false;
+    return Container(
+        child: Column(
+      children: [
+        Row(children: [
+          Checkbox(
+            value: isChecked,
+            onChanged: (bool? value) {
+              setState(() {
+                isChecked = value;
+              });
+            },
+          ),
+          Text(emailName),
+        ]),
+      ],
+    ));
   }
 
   Widget _updateButton() {
@@ -374,10 +423,12 @@ class _MyHomePageState extends State<MyHomePage> {
         contactDmList = [];
 
         if (info["allUsers"]!.length > 1) {
-          for (String emailName in (info['allUsers'].cast<String>())) {
+          allUsersList = info["allUsers"].cast<String>();
+          for (String emailName in allUsersList) {
             if (emailName != emailUserAtual) {
               setState(() {
                 contactDmList.add(_contactButton(emailName, false));
+                contactsToGroup.add(_addToGroup(emailName));
               });
             }
           }
@@ -482,7 +533,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   "nome": toName,
                   "email": emailUserAtual,
                   "mensagem": msg,
-                  "grupo" : isGroup
+                  "grupo": isGroup
                 };
 
                 var info = await toFromServer(payload);
@@ -514,7 +565,7 @@ class _MyHomePageState extends State<MyHomePage> {
       payload = {
         "pedido": "getDM",
         "email": emailUserAtual,
-        "destinatario": nomeOutro
+        "nome": nomeOutro
       };
     }
     print(payload);
@@ -522,17 +573,6 @@ class _MyHomePageState extends State<MyHomePage> {
     print(payload);
     print(info);
     print("getMsgHist info");
-
-    // var info = {
-    //   "quant": 0,
-    //   "members": ["j@gmail.com", "o@gmail.com"],
-    //   "who": [],
-    //   "hist": []
-    // }; // teste 1
-
-    // var info = {"quant": 1, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com"], "hist": ["oi"]}; // teste 2
-
-    // var info = {"quant": 2, "members": ["j@gmail.com", "o@gmail.com"], "who": ["j@gmail.com", "o@gmail.com"], "hist": ["oi", "eae"]}; // teste 3
 
     setState(() {
       msgBoxHistory = [];
@@ -548,7 +588,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 width: 400,
                 decoration: BoxDecoration(color: Colors.blue),
-                child: Text((info['hist'] as List<String>)[i]),
+                child: Text((info['hist'].cast<String>())[i]),
               ),
             ),
           );
@@ -562,7 +602,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 400,
                 decoration: BoxDecoration(color: Colors.green),
                 child: Text(
-                    "${(info['who'] as List<String>)[i]}: ${(info['hist'] as List<String>)[i]}"),
+                    "${(info['who'].cast<String>())[i]}: ${(info['hist'].cast<String>())[i]}"),
               ),
             ),
           );
