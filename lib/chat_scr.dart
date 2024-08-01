@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'API.dart';
@@ -44,11 +45,54 @@ class _ChatScreenState extends State<ChatScreen> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
+              _profileInfo(),
+              SizedBox(width: 25),
               _contactList(),
+              SizedBox(width: 25),
               _chatBox(),
             ],
           ),
-        ),),
+        ),
+      ),
+    );
+  }
+
+  Widget _profileInfo() {
+    return Column(
+      children: [
+        const Text(
+          "Seu perfil",
+          style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF337d07)),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+              border: Border(
+                  top: BorderSide(width: 2.0, color: Colors.grey),
+                  bottom: BorderSide(width: 2.0, color: Colors.grey))),
+          width: 200,
+          height: 200,
+          child: SingleChildScrollView(
+            child: Column(children: [
+              Text("Nome:"),
+              Text(userAtual),
+              SizedBox(
+                height: 10
+              ),
+              Text("E-mail:"),
+              Text(userAtual),
+              SizedBox(
+                height: 10
+              ),
+              Text("Localização:"),
+              Text(userAtual)
+            ]),
+          ),
+        ),
+      ],
     );
   }
 
@@ -59,7 +103,7 @@ class _ChatScreenState extends State<ChatScreen> {
         IconButton(
           icon: const Icon(Icons.update, color: Color(0xFF337d07)),
           style: TextButton.styleFrom(
-            //padding: EdgeInsets.all(15),
+              //padding: EdgeInsets.all(15),
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(60),
@@ -68,7 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
             getContactList(); ///////
           },
         ),
-        SizedBox(width: 50),
+        SizedBox(width: 20),
         // Área de DMs
         Column(
           children: [
@@ -79,13 +123,25 @@ class _ChatScreenState extends State<ChatScreen> {
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF337d07)),
             ),
-            Column(children: contactDmList)
+            Container(
+              margin: EdgeInsets.only(top: 10),
+              decoration: BoxDecoration(
+                  border: Border(
+                      top: BorderSide(width: 2.0, color: Colors.grey),
+                      bottom: BorderSide(width: 2.0, color: Colors.grey))),
+              width: 200,
+              height: 400,
+              child: SingleChildScrollView(
+                child: Column(children: contactDmList),
+              ),
+            ),
           ],
         ),
-        SizedBox(width: 50),
+        SizedBox(width: 25),
         // Área de Grupos
         Column(
           children: [
+            SizedBox(height: 42),
             const Text(
               "Grupos",
               style: TextStyle(
@@ -93,22 +149,34 @@ class _ChatScreenState extends State<ChatScreen> {
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF337d07)),
             ),
+            Container(
+              margin: EdgeInsets.only(top: 10),
+              decoration: BoxDecoration(
+                  border: Border(
+                      top: BorderSide(width: 2.0, color: Colors.grey),
+                      bottom: BorderSide(width: 2.0, color: Colors.grey))),
+              width: 200,
+              height: 400,
+              child: SingleChildScrollView(
+                child: Column(children: contactGrList),
+              ),
+            ),
+            SizedBox(height: 10),
             TextButton(
               child: Text(
                 txtGroupBtn,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               style: TextButton.styleFrom(
-                //padding: EdgeInsets.all(15),
+                  //padding: EdgeInsets.all(15),
                   backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(60),
                       side: BorderSide(color: Colors.grey, width: 3))),
               onPressed: () {
                 showNewGroupMenu();
-              },),
-            SizedBox(height: 10),
-            Column(children: contactGrList),
+              },
+            ),
           ],
         ),
       ],
@@ -205,17 +273,20 @@ class _ChatScreenState extends State<ChatScreen> {
         if ((info['who'].cast<String>())[i] == userAtual) {
           msgBoxHistory.add(
             Padding(
-              //alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(top: 5, left: 5, right: 5),
+                //alignment: Alignment.centerRight,
+                padding: EdgeInsets.only(top: 5, right: 15),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(width: 80),
-                    Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: Colors.blue),
-                      child: Text((info['hist'].cast<String>())[i],
-                          style: TextStyle(fontSize: 16)),
+                    SizedBox(width: 50),
+                    Flexible(
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(color: Colors.blue),
+                        child: Text((info['hist'].cast<String>())[i],
+                            textAlign: TextAlign.right,
+                            style: TextStyle(fontSize: 14)),
+                      ),
                     ),
                   ],
                 )),
@@ -226,19 +297,22 @@ class _ChatScreenState extends State<ChatScreen> {
           msgBoxHistory.add(
             Padding(
               //alignment: Alignment.centerRight,
-              padding: EdgeInsets.only(top: 5, left: 5, right: 5),
+              padding: EdgeInsets.only(top: 5, left: 15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: Colors.green),
-                      child: Text(
-                          isGroup
-                              ? "${(info['who'].cast<String>())[i]}: ${(info['hist'].cast<String>())[i]}"
-                              : (info['hist'].cast<String>())[i],
-                          style: TextStyle(fontSize: 16))),
-                  SizedBox(width: 80),
+                  Flexible(
+                    child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(color: Colors.green),
+                        child: Text(
+                            isGroup
+                                ? "${(info['who'].cast<String>())[i]}: ${(info['hist'].cast<String>())[i]}"
+                                : (info['hist'].cast<String>())[i],
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontSize: 14))),
+                  ),
+                  SizedBox(width: 50),
                 ],
               ),
             ),
@@ -251,35 +325,35 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _checkBoxAddToGroup(String emailName, int index) {
     return Container(
         child: Column(
-          children: [
-            Container(
-              width: 200,
-              padding: EdgeInsets.all(0),
-              child: Row(children: [
-                StatefulBuilder(
-                  builder: (BuildContext context, StateSetter setState) {
-                    return Checkbox(
-                      value: boolsToGroup[index],
-                      activeColor: Colors.green,
-                      onChanged: (value) {
-                        if (value == true) {
-                          chosenUsers.add(emailName);
-                        } else {
-                          chosenUsers.remove(emailName);
-                        }
+      children: [
+        Container(
+          width: 200,
+          padding: EdgeInsets.all(0),
+          child: Row(children: [
+            StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Checkbox(
+                  value: boolsToGroup[index],
+                  activeColor: Colors.green,
+                  onChanged: (value) {
+                    if (value == true) {
+                      chosenUsers.add(emailName);
+                    } else {
+                      chosenUsers.remove(emailName);
+                    }
 
-                        setState(() {
-                          boolsToGroup[index] = value!;
-                        });
-                      },
-                    );
+                    setState(() {
+                      boolsToGroup[index] = value!;
+                    });
                   },
-                ),
-                Text(emailName),
-              ]),
+                );
+              },
             ),
-          ],
-        ));
+            Text(emailName),
+          ]),
+        ),
+      ],
+    ));
   }
 
   showNewGroupMenu() {
@@ -338,7 +412,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _setGroupName(){
+  Widget _setGroupName() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -360,17 +434,21 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _setGroupInitMembers(){
-    return Column(children: [Text(
-      "Convidar usuários",
-      style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF337d07)),
-    ),
-      SizedBox(height: 10),
-      // Coluna de CheckBoxes
-      Column(children: contactsToGroup),],);
+  Widget _setGroupInitMembers() {
+    return Column(
+      children: [
+        Text(
+          "Convidar usuários",
+          style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF337d07)),
+        ),
+        SizedBox(height: 10),
+        // Coluna de CheckBoxes
+        Column(children: contactsToGroup),
+      ],
+    );
   }
 
   Widget _chatBox() {
@@ -381,8 +459,8 @@ class _ChatScreenState extends State<ChatScreen> {
             color: Colors.white,
             border: Border.all(color: Colors.grey, width: 2),
             borderRadius: const BorderRadius.all(Radius.circular(25))),
-        width: 500,
-        height: 850,
+        width: 400,
+        height: 560,
         child: Column(
           children: [
             Container(
@@ -391,17 +469,17 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Text(
                 toName,
                 style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF337d07)),
               ),
             ),
-            Divider(height: 30, thickness: 2.5),
+            Divider(height: 20, thickness: 2.5),
             Container(
-              width: 450,
-              height: 700,
+              height: 425,
               child: _cascadingMsgs(),
             ),
+            Divider(height: 20, thickness: 2.5),
             _chatInput(),
           ],
         ),
@@ -410,7 +488,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _cascadingMsgs() {
-    return Column(children: msgBoxHistory);
+    return SingleChildScrollView(
+      child: Column(children: msgBoxHistory),
+    );
   }
 
   Widget _chatInput() {
@@ -420,8 +500,9 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 400,
+              width: 320,
               child: TextField(
+                style: TextStyle(fontSize: 14),
                 onChanged: (String newMsg) async {
                   msg = newMsg;
                   print(msg);
@@ -463,6 +544,4 @@ class _ChatScreenState extends State<ChatScreen> {
       ],
     );
   }
-
-
 }
