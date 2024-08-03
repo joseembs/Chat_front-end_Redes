@@ -124,22 +124,29 @@ Widget _cadastro(BuildContext contextIn) {
                   borderRadius: BorderRadius.circular(15),
                   side: BorderSide(color: Colors.grey, width: 2))),
           onPressed: () async {
-            var payload = {
-              "pedido": "cadastro",
-              "email": emailSignIn,
-              "nome": nomeSignIn,
-              "local": localSignIn
-            };
-
-            var info = await toFromServer(payload);
-            //var info = {"cadastrado": true}; // teste
-            print(info);
-
-            if (info['cadastrado'] as bool == true) {
-              print("email cadastrado com sucesso");
-              nextPage(contextIn, emailSignIn);
+            if (emailSignIn == "" || nomeSignIn == "" || localSignIn == "") {
+              ScaffoldMessenger.of(contextIn).showSnackBar(SnackBar(
+                  content: Text("Preencha todos os campos para se cadastrar")));
             } else {
-              print("email inválido ou já cadastrado");
+              var payload = {
+                "pedido": "cadastro",
+                "email": emailSignIn,
+                "nome": nomeSignIn,
+                "local": localSignIn
+              };
+
+              var info = await toFromServer(payload);
+              //var info = {"cadastrado": true}; // teste
+              print(info);
+
+              if (info['cadastrado'] as bool == true) {
+                print("email cadastrado com sucesso");
+                nextPage(contextIn, emailSignIn);
+              } else {
+                print("email inválido ou já cadastrado");
+                ScaffoldMessenger.of(contextIn).showSnackBar(SnackBar(
+                    content: Text("E-mail inválido ou já cadastrado")));
+              }
             }
           },
           child: Text(
@@ -226,6 +233,10 @@ Widget _login(BuildContext contextIn) {
                       borderRadius: BorderRadius.circular(15),
                       side: BorderSide(color: Colors.grey, width: 2))),
               onPressed: () async {
+                if(emailLogin == ""){
+                  ScaffoldMessenger.of(contextIn).showSnackBar(SnackBar(
+                      content: Text("Informe um e-mail para realizar login")));
+                }
                 var payload = {"pedido": "login", "email": emailLogin};
 
                 var info = await toFromServer(payload);
@@ -237,6 +248,8 @@ Widget _login(BuildContext contextIn) {
                   nextPage(contextIn, emailLogin);
                 } else {
                   print("não foi");
+                  ScaffoldMessenger.of(contextIn).showSnackBar(SnackBar(
+                      content: Text("E-mail não encontrado")));
                 }
               },
               child:
