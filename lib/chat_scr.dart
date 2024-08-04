@@ -5,9 +5,15 @@ import 'package:flutter/widgets.dart';
 import 'API.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, required this.emailUserAtual});
+  const ChatScreen(
+      {super.key,
+      required this.nomeUserAtual,
+      required this.emailUserAtual,
+      required this.localUserAtual});
 
+  final String nomeUserAtual;
   final String emailUserAtual;
+  final String localUserAtual;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -19,12 +25,15 @@ class _ChatScreenState extends State<ChatScreen> {
     return _chatBody();
   }
 
-  late String userAtual = widget.emailUserAtual;
+  late String nomeAtual = widget.nomeUserAtual;
+  late String emailAtual = widget.emailUserAtual;
+  late String localAtual = widget.localUserAtual;
 
   String groupNameInit = "";
   String msg = "";
   String rcv = "Aguardando mensagem...";
   String toName = "erro";
+  String toEmail = "erro";
   String txtGroupBtn = "Novo grupo";
   String txtInviteStatus = "Pedir para entrar";
   String chatDet1 = "";
@@ -46,7 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
   List<bool?> boolsToGroupInit = [];
   List<bool?> boolsToGroup = [];
 
-  List<String> allUsersList = [];
+  Map<String, String> allUsersMap = {};
   List<String> chosenAddUsers = [];
   List<String> chosenDelUsers = [];
   List<String> membersGrupoAtual = [];
@@ -101,14 +110,14 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: EdgeInsets.all(12),
               child: Column(children: [
                 Text("Nome:", style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(userAtual), // temp
+                Text(nomeAtual),
                 SizedBox(height: 10),
                 Text("E-mail:", style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(userAtual),
+                Text(emailAtual),
                 SizedBox(height: 10),
                 Text("Localização:",
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(userAtual) // temp
+                Text(localAtual)
               ]),
             ),
           ),
@@ -163,7 +172,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   borderRadius: BorderRadius.circular(60),
                   side: BorderSide(color: Colors.grey, width: 3))),
           onPressed: () async {
-            getContactList(); ///////
+            getContactList();
           },
         ),
         SizedBox(width: 20),
@@ -251,15 +260,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Prepara a lista de DMs e de CheckBoxes dos membros inicias de um grupo
     if (info["allUsers"]!.length > 1) {
-      allUsersList = info["allUsers"].cast<String>();
-      for (String emailName in allUsersList) {
-        if (emailName != userAtual) {
+      allUsersMap = info["allUsers"].cast<String, String>();
+      for (String emailTemp in allUsersMap.keys) {
+        if (emailTemp != emailAtual) {
           setState(() {
             // Prepara a lista de DMs
-            contactDmList.add(_contactButton(emailName, false));
+            contactDmList
+                .add(_contactButton(allUsersMap[emailTemp]!, emailTemp, false));
             // Já prepara a lista de CheckBoxes
             boolsToGroup.add(false);
-            initGroupUserBoxes.add(_checkBoxToGroup(emailName, index, "add"));
+            initGroupUserBoxes.add(_checkBoxToGroup(emailTemp, index, "add"));
             index++;
           });
         }
@@ -270,15 +280,16 @@ class _ChatScreenState extends State<ChatScreen> {
     String tempGroupName;
     // Prepara a lista de grupos
     if (info["allGroups"]!.isNotEmpty) {
-      for (tempGroupName in (info['allGroups'].cast<String>())) {
+      for (tempGroupName in (info["allGroups"].cast<String>())) {
         setState(() {
-          contactGrList.add(_contactButton(tempGroupName, true));
+          contactGrList.add(_contactButton(tempGroupName, tempGroupName,
+              true)); // nome do grupo é considerado email por praticidade
         });
       }
     }
   }
 
-  Widget _contactButton(String chatName, bool clickGroup) {
+  Widget _contactButton(String chatName, String chatEmail, bool clickGroup) {
     return Padding(
       padding: EdgeInsets.only(top: 10),
       child: TextButton(
@@ -295,7 +306,8 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             isGroup = clickGroup;
             toName = chatName;
-            getMsgHist(chatName);
+            toEmail = chatEmail;
+            getMsgHist(chatEmail);
             print("getMsgHist");
           });
         },
@@ -304,15 +316,15 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  getMsgHist(String nomeOutro) async {
+  getMsgHist(String emailOutro) async {
     Map<String, String> payload;
     if (isGroup) {
       payload = {
         "pedido": "getGrupo",
-        "nome": nomeOutro,
+        "nome": emailOutro,
       };
     } else {
-      payload = {"pedido": "getDM", "email": userAtual, "nome": nomeOutro};
+      payload = {"pedido": "getDM", "email": emailAtual, "nome": emailOutro};
     }
 
     print(payload);
@@ -322,28 +334,40 @@ class _ChatScreenState extends State<ChatScreen> {
     if (isGroup) {
       chatDet1 = "Admin: ";
       chatDet2 = "Membros: ";
-      chatDet1 += info['members'].cast<String>()[0];
+      chatDet1 += info['members'][0].cast<String>()[1];
 
       for (int i = 1; i < info['members'].length; i++) {
-        chatDet2 += info['members'].cast<String>()[i];
+        chatDet2 += info['members'][i][1];
         if (i < info['members'].length - 1) {
           chatDet2 += ", ";
         }
       }
 
-      if (!(info['members'].cast<String>()).contains(userAtual)) {
+      bool inGroupCheck = false;
+      var member;
+      for (member in info['members']) {
+        if (emailAtual == member[0]) {
+          inGroupCheck = true;
+        }
+      }
+
+      if (!inGroupCheck) {
         inGroup = false;
 
-        // if(!(info['invites'].cast<String>()).contains(userAtual)) { // temp
-        //   txtInviteStatus = "Pedido enviado";
-        // } else {
-        //   txtInviteStatus = "Pedir para entrar";
-        // }
+        if (!(info['convites'].cast<String>()).contains(emailAtual)) {
+          // temp
+          txtInviteStatus = "Pedido enviado";
+        } else {
+          txtInviteStatus = "Pedir para entrar";
+        }
       } else {
         inGroup = true;
 
-        if (userAtual == info['members'].cast<String>()[0]) {
-          membersGrupoAtual = info['members'].cast<String>();
+        if (emailAtual == info['members'][0][0]) {
+          membersGrupoAtual = [];
+          for (int i = 1; i < info['members'].length; i++) {
+            membersGrupoAtual.add(info['members'][i][0]);
+          }
           isAdmin = true;
         } else {
           isAdmin = false;
@@ -352,8 +376,8 @@ class _ChatScreenState extends State<ChatScreen> {
     } else {
       inGroup = true;
       isAdmin = false;
-      chatDet1 = "Local: $nomeOutro"; // temp
-      chatDet2 = "E-mail: $nomeOutro"; // temp
+      chatDet1 = "Local: ${info['dados']['local']}"; // temp
+      chatDet2 = "E-mail: $emailOutro"; // temp
     }
 
     setState(() {
@@ -361,8 +385,10 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     for (int i = 0; i < (info['quant'] as int); i++) {
       setState(() {
+        var whoList = info['who'][i];
         //usuario atual mandou
-        if ((info['who'].cast<String>())[i] == userAtual) {
+        if ((whoList.cast<String>())[0] == emailAtual) {
+          String tempMsg = (info['hist'].cast<String>())[i];
           msgBoxHistory.add(
             Padding(
                 //alignment: Alignment.centerRight,
@@ -375,9 +401,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Container(
                         padding: EdgeInsets.all(6),
                         decoration: BoxDecoration(color: Colors.blue),
-                        child: Text((info['hist'].cast<String>())[i],
-                            textAlign: TextAlign.right,
-                            style: TextStyle(fontSize: 14)),
+                        child: !tempMsg.contains("Qm90w6NvQXJxdWl2bw==")
+                            ? Text(tempMsg,
+                                textAlign: TextAlign.right,
+                                style: TextStyle(fontSize: 14))
+                            : _fileMsg(tempMsg),
                       ),
                     ),
                   ],
@@ -386,6 +414,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
         // outro mandou
         else {
+          String tempMsg = (info['hist'].cast<String>())[i];
           msgBoxHistory.add(
             Padding(
               //alignment: Alignment.centerRight,
@@ -398,16 +427,21 @@ class _ChatScreenState extends State<ChatScreen> {
                       padding: EdgeInsets.all(6),
                       decoration: BoxDecoration(color: Colors.green),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           isGroup
-                              ? Text("${(info['who'].cast<String>())[i]}:",
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600 ))
+                              ? Text("${(whoList.cast<String>())[1]}:",
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600))
                               : const SizedBox(),
-                          Text(
-                            (info['hist'].cast<String>())[i],
-                            textAlign: TextAlign.left,
-                            style: TextStyle(fontSize: 14),
-                          )
+                          !tempMsg.contains("Qm90w6NvQXJxdWl2bw==")
+                              ? Text(
+                                  (info['hist'].cast<String>())[i],
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(fontSize: 14),
+                                )
+                              : _fileMsg(tempMsg),
                         ],
                       ),
                     ),
@@ -511,7 +545,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         } else {
                           var payload = {
                             "pedido": "criaGrupo",
-                            "email": userAtual,
+                            "email": emailAtual,
                             "nome": groupNameInit,
                             "membros": chosenAddUsers
                           };
@@ -667,7 +701,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   sendInvite() async {
-    var payload = {"pedido": "pedirEntrada", "nome": toName};
+    var payload = {"pedido": "pedirEntrada", "nome": toEmail};
 
     var info = await toFromServer(payload);
 
@@ -731,8 +765,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                       borderRadius: BorderRadius.circular(15),
                                       side: BorderSide(
                                           color: Colors.grey, width: 2))),
-                              onPressed: () {
-                                //showAdminPopup();
+                              onPressed: () async {
+                                var payload = {
+                                  "pedido": "sairGrupo",
+                                  "nome": toName,
+                                  "membros": [emailAtual]
+                                };
+
+                                var info = await toFromServer(payload);
+                                print(info);
                               },
                               child: Text("Sair do grupo",
                                   style:
@@ -774,20 +815,23 @@ class _ChatScreenState extends State<ChatScreen> {
     int index = 0;
 
     if (info["allUsers"]!.length > 1) {
-      allUsersList = info["allUsers"].cast<String>();
-      for (String emailName in allUsersList) {
-        if (emailName != userAtual && !membersGrupoAtual.contains(emailName)) {
+      allUsersMap = info["allUsers"].cast<String, String>();
+      for (String emailTemp in allUsersMap.keys) {
+        print(emailTemp + "a");
+        print(membersGrupoAtual);
+        if (emailTemp != emailAtual && !membersGrupoAtual.contains(emailTemp)) {
+          //
           setState(() {
             // Lista de CheckBoxes
             boolsToGroup.add(false);
-            newGroupUserBoxes.add(_checkBoxToGroup(emailName, index, "add"));
+            newGroupUserBoxes.add(_checkBoxToGroup(emailTemp, index, "add"));
             index++;
           });
-        } else if (emailName != userAtual) {
+        } else if (emailTemp != emailAtual) {
           setState(() {
             // Lista de CheckBoxes
             boolsToGroup.add(false);
-            oldGroupUserBoxes.add(_checkBoxToGroup(emailName, index, "remove"));
+            oldGroupUserBoxes.add(_checkBoxToGroup(emailTemp, index, "remove"));
             index++;
           });
         }
@@ -814,6 +858,25 @@ class _ChatScreenState extends State<ChatScreen> {
           actions: [
             Column(
               children: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          side: BorderSide(color: Colors.grey, width: 2))),
+                  onPressed: () async {
+                    var payload = {
+                      "pedido": "sairGrupo",
+                      "nome": toName,
+                      "membros": [emailAtual]
+                    };
+
+                    var info = await toFromServer(payload);
+                    print(info);
+                  },
+                  child: Text("Sair do grupo",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                SizedBox(height: 10),
                 _setGroupOldMembers(),
                 SizedBox(height: 10),
                 _setGroupNewMembers(),
@@ -827,7 +890,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   onPressed: () async {
                     var payload = {
                       "pedido": "addGrupo",
-                      "nome": toName,
+                      "nome": toEmail,
                       "membros": chosenAddUsers
                     };
 
@@ -838,12 +901,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
                     payload = {
                       "pedido": "sairGrupo",
-                      "nome": toName,
+                      "nome": toEmail,
                       "membros": chosenDelUsers
                     };
 
                     print(chosenDelUsers);
-                    print(toName);
+                    print(toEmail);
 
                     info = await toFromServer(payload);
                     print(info);
@@ -869,55 +932,114 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _chatInput() {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 320,
-              padding: EdgeInsets.only(bottom: 10),
-              child: TextField(
-                style: TextStyle(fontSize: 14),
-                onChanged: (String newMsg) async {
-                  msg = newMsg;
-                  print(msg);
-                },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "Digite sua mensagem",
+        Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 270,
+                child: TextField(
+                  style: TextStyle(fontSize: 14),
+                  onChanged: (String newMsg) async {
+                    msg = newMsg;
+                    print(msg);
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Digite sua mensagem",
+                  ),
                 ),
               ),
-            ),
-            SizedBox(width: 10),
-            IconButton(
-              icon: const Icon(Icons.air, color: Color(0xFF337d07)),
-              style: TextButton.styleFrom(
-                  backgroundColor: Color(0x6099f57d),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(60),
-                      side: BorderSide(color: Colors.grey, width: 3))),
-              onPressed: () async {
-                var payload = {
-                  "pedido": "sendMsg",
-                  "nome": toName,
-                  "email": userAtual,
-                  "mensagem": msg,
-                  "grupo": isGroup
-                };
-
-                var info;
-
-                info = await toFromServer(payload);
-
-                print(info);
-
-                print('enviou');
-              },
-            ),
-            // SizedBox(width: 10),
-            // Text(rcv),
-          ],
+              SizedBox(width: 10),
+              _fileBtn(),
+              SizedBox(width: 10),
+              IconButton(
+                icon: const Icon(Icons.air, color: Color(0xFF337d07)),
+                style: TextButton.styleFrom(
+                    backgroundColor: Color(0x6099f57d),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(60),
+                        side: BorderSide(color: Colors.grey, width: 3))),
+                onPressed: () async {
+                  callSendMsg();
+                },
+              ),
+              // SizedBox(width: 10),
+              // Text(rcv),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  void callSendMsg({isFile = false, String fileName = "erro"}) async {
+    var payload;
+    if (isFile) {
+      payload = {
+        "pedido": "sendMsg",
+        "nome": toEmail,
+        "email": emailAtual,
+        "mensagem": fileName + "Qm90w6NvQXJxdWl2bw==",
+        "grupo": isGroup
+      };
+    } else {
+      payload = {
+        "pedido": "sendMsg",
+        "nome": toEmail,
+        "email": emailAtual,
+        "mensagem": msg,
+        "grupo": isGroup
+      };
+    }
+
+    var info = await toFromServer(payload);
+
+    print(info);
+
+    print('enviou');
+  }
+
+  Widget _fileMsg(String fileName) {
+    fileName = fileName.replaceAll("Qm90w6NvQXJxdWl2bw==", "");
+    return TextButton.icon(
+      icon: Icon(Icons.download),
+      label: Text(
+        fileName,
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      style: TextButton.styleFrom(
+         padding: EdgeInsets.only(top:15,bottom: 15, left:5, right: 10),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: Colors.black54, width: 3))),
+      onPressed: () {
+        downloadFile(emailAtual, fileName);
+      },
+    );
+  }
+
+  Widget _fileBtn() {
+    return IconButton(
+      icon: const Icon(Icons.file_upload, color: Color(0xFF337d07)),
+      style: TextButton.styleFrom(
+          backgroundColor: Color(0x6099f57d),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(60),
+              side: BorderSide(color: Colors.grey, width: 3))),
+      onPressed: () async {
+        var payload = {
+          "pedido": "uploadFile",
+          "nome": toEmail,
+          "email": emailAtual,
+          "mensagem": msg,
+          "grupo": isGroup
+        };
+
+        uploadFile(payload, callSendMsg);
+      },
     );
   }
 }

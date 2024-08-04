@@ -23,11 +23,11 @@ Widget _mainMenu(BuildContext contextIn) {
   );
 }
 
-nextPage(BuildContext contextIn, String emailLogin) {
+nextPage(BuildContext contextIn, String nomeLogin, String emailLogin, String localLogin) {
   Navigator.push(
     contextIn,
     MaterialPageRoute(
-        builder: (context) => ChatAppMain(userLogin: emailLogin)),
+        builder: (context) => ChatAppMain(userNome: nomeLogin, userEmail: emailLogin, userLocal: localLogin)),
   );
 }
 
@@ -141,7 +141,7 @@ Widget _cadastro(BuildContext contextIn) {
 
               if (info['cadastrado'] as bool == true) {
                 print("email cadastrado com sucesso");
-                nextPage(contextIn, emailSignIn);
+                nextPage(contextIn, info['dados']['nome'], info['dados']['email'], info['dados']['local']);
               } else {
                 print("email inválido ou já cadastrado");
                 ScaffoldMessenger.of(contextIn).showSnackBar(SnackBar(
@@ -245,7 +245,7 @@ Widget _login(BuildContext contextIn) {
 
                 if (info['cadastrado'] as bool == true) {
                   print("foi");
-                  nextPage(contextIn, emailLogin);
+                  nextPage(contextIn, info['dados']['nome'], info['dados']['email'], info['dados']['local']);
                 } else {
                   print("não foi");
                   ScaffoldMessenger.of(contextIn).showSnackBar(SnackBar(
