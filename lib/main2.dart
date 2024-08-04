@@ -18,12 +18,13 @@ class _ChatAppMainState extends State<ChatAppMain> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Whatsapp2',
+      title: 'Chat em grupo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: HomePage2(title: 'Whatsapp 2', nomeUserAtual: widget.userNome, emailUserAtual: widget.userEmail, localUserAtual: widget.userLocal),
+      home: HomePage2(title: 'Chat em grupo', nomeUserAtual: widget.userNome, emailUserAtual: widget.userEmail, localUserAtual: widget.userLocal),
+
     );
   }
 }
@@ -50,7 +51,10 @@ class _HomePage2State extends State<HomePage2> {
             .colorScheme
             .inversePrimary,
         title: Text(widget.title),
-        leading: Icon(Icons.messenger),
+        leading: Icon(Icons.textsms_outlined),
+        actions: [
+          Padding(padding: EdgeInsets.only(left:20, right: 20), child: Text("Feito por: Elis R. B. - Henrique C. R. S. - José Edson M. B. S."),),
+        ],
       ),
       body: ChatScreen(nomeUserAtual: widget.nomeUserAtual, emailUserAtual: widget.emailUserAtual, localUserAtual: widget.localUserAtual),
     );
