@@ -401,15 +401,15 @@ class _ChatScreenState extends State<ChatScreen> {
     // Prepara a lista de DMs e de CheckBoxes dos membros inicias de um grupo
     if (info["allUsers"]!.length > 1) {
       allUsersMap = info["allUsers"].cast<String, String>();
-      for (String emailTemp in allUsersMap.keys) {
-        if (emailTemp != emailAtual) {
+      for (String nomeTemp in allUsersMap.values) {
+        if (nomeTemp != nomeAtual) {
           setState(() {
             // Prepara a lista de DMs
             contactDmList
-                .add(_contactButton(allUsersMap[emailTemp]!, emailTemp, false));
+                .add(_contactButton(allUsersMap[nomeTemp]!, nomeTemp, false));
             // Já prepara a lista de CheckBoxes
             boolsToGroup.add(false);
-            initGroupUserBoxes.add(_checkBoxToGroup(emailTemp, index, "add"));
+            initGroupUserBoxes.add(_checkBoxToGroup(nomeTemp, index, "add"));
             index++;
           });
         }

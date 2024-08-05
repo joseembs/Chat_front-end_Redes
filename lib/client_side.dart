@@ -87,7 +87,7 @@ Future<void> downloadFile(String userAtual, String fileName) async{
   await Future.delayed(Duration(seconds: 1));
 
   Directory selfDir = Directory.current;
-  final receivedFile = File('${selfDir.path}/$fileName'); //
+  final receivedFile = File('${selfDir.path}/$fileName');
 
   await receivedFile.openWrite().addStream(socket);
   await socket.close();
