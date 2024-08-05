@@ -1,8 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
-import 'API.dart';
+import 'client_side.dart';
 import 'main.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -26,12 +24,9 @@ class _ChatScreenState extends State<ChatScreen> {
     return _chatBody();
   }
 
-  @override
-  initState() {
-    autoRefresh();
-  }
-
   autoRefresh() async {
+    print("autoRefresh: ${refreshCount}");
+    refreshCount++;
     getContactList();
     getNotifs();
     if (toName != "erro") {
@@ -42,6 +37,8 @@ class _ChatScreenState extends State<ChatScreen> {
       autoRefresh();
     }
   }
+
+  int refreshCount = 1;
 
   late String nomeAtual = widget.nomeUserAtual;
   late String emailAtual = widget.emailUserAtual;
@@ -59,7 +56,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isGroup = false;
   bool inGroup = false;
   bool isAdmin = false;
-  bool isAuto = true;
+  bool isAuto = false;
 
   List<Widget> contactDmList = [];
   List<Widget> contactGrList = [];
@@ -80,11 +77,132 @@ class _ChatScreenState extends State<ChatScreen> {
 
   var msgController = TextEditingController();
 
+  lastPage(BuildContext contextIn) {
+    Navigator.push(
+      contextIn,
+      MaterialPageRoute(builder: (context) => const ChatAppStart()),
+    );
+  }
+
+  Widget _chatBody() {
+    return Center(
+      child: SingleChildScrollView(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              Column(
+                children: [
+                  _profileInfo(),
+                  SizedBox(height: 21),
+                  _notifications(),
+                  SizedBox(height: 10),
+                  TextButton(
+                    child: Text(
+                      "Sair",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: TextButton.styleFrom(
+                        //padding: EdgeInsets.all(15),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(60),
+                            side: BorderSide(color: Colors.grey, width: 3))),
+                    onPressed: () {
+                      nomeAtual = "";
+                      emailAtual = "";
+                      localAtual = "";
+                      lastPage(context);
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(width: 25),
+              _contactList(),
+              SizedBox(width: 25),
+              Visibility(
+                  visible: toName == "erro" ? false : true,
+                  child: inGroup ? _chatBox() : _askEnterBox()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _profileInfo() {
+    return Column(
+      children: [
+        const Text(
+          "Seu perfil",
+          style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF337d07)),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+              border: Border(
+                  top: BorderSide(width: 2.0, color: Colors.grey),
+                  bottom: BorderSide(width: 2.0, color: Colors.grey))),
+          width: 200,
+          height: 170,
+          child: SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.all(12),
+              child: Column(children: [
+                Text("Nome:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(nomeAtual),
+                SizedBox(height: 10),
+                Text("E-mail:", style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(emailAtual),
+                SizedBox(height: 10),
+                Text("Localização:",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(localAtual)
+              ]),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _notifications() {
+    return Column(
+      children: [
+        const Text(
+          "Notificações",
+          style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF337d07)),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 10),
+          decoration: BoxDecoration(
+              border: Border(
+                  top: BorderSide(width: 2.0, color: Colors.grey),
+                  bottom: BorderSide(width: 2.0, color: Colors.grey))),
+          width: 200,
+          height: 170,
+          child: SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.all(12),
+              child: Column(children: notifList),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   getNotifs() async {
     var payload = {"pedido": "getPerfil", "email": emailAtual};
 
     var info = await toFromServer(payload);
-    print(info);
+    // print(info);
 
     notifList = [];
     var tempInvite;
@@ -161,133 +279,6 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ));
     }
-  }
-
-  answerInvite(List<String> invite, bool answer) async {}
-
-  Widget _chatBody() {
-    return Center(
-      child: SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              Column(
-                children: [
-                  _profileInfo(),
-                  SizedBox(height: 21),
-                  _notifications(),
-                  SizedBox(height: 10),
-                  TextButton(
-                    child: Text(
-                      "Sair",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    style: TextButton.styleFrom(
-                        //padding: EdgeInsets.all(15),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(60),
-                            side: BorderSide(color: Colors.grey, width: 3))),
-                    onPressed: () {
-                      nomeAtual = "";
-                      emailAtual = "";
-                      localAtual = "";
-                      lastPage(context);
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(width: 25),
-              _contactList(),
-              SizedBox(width: 25),
-              Visibility(
-                  visible: toName == "erro" ? false : true,
-                  child: inGroup ? _chatBox() : _askEnterBox()),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  lastPage(BuildContext contextIn) {
-    Navigator.push(
-      contextIn,
-      MaterialPageRoute(builder: (context) => const ChatAppStart()),
-    );
-  }
-
-  Widget _profileInfo() {
-    return Column(
-      children: [
-        const Text(
-          "Seu perfil",
-          style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF337d07)),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(
-              border: Border(
-                  top: BorderSide(width: 2.0, color: Colors.grey),
-                  bottom: BorderSide(width: 2.0, color: Colors.grey))),
-          width: 200,
-          height: 170,
-          child: SingleChildScrollView(
-            child: Container(
-              padding: EdgeInsets.all(12),
-              child: Column(children: [
-                Text("Nome:", style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(nomeAtual),
-                SizedBox(height: 10),
-                Text("E-mail:", style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(emailAtual),
-                SizedBox(height: 10),
-                Text("Localização:",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(localAtual)
-              ]),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _notifications() {
-    return Column(
-      children: [
-        const Text(
-          "Notificações",
-          style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF337d07)),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(
-              border: Border(
-                  top: BorderSide(width: 2.0, color: Colors.grey),
-                  bottom: BorderSide(width: 2.0, color: Colors.grey))),
-          width: 200,
-          height: 170,
-          child: SingleChildScrollView(
-            child: Container(
-              padding: EdgeInsets.all(12),
-              child: Column(children: notifList),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  getNotifList() {
-    for (int temp = 0; temp < 1; temp++) {}
   }
 
   Widget _contactList() {
@@ -399,7 +390,7 @@ class _ChatScreenState extends State<ChatScreen> {
     var payload = {"pedido": "atualizar"};
 
     var info = await toFromServer(payload);
-    print(info);
+    // print(info);
 
     contactDmList = [];
     initGroupUserBoxes = [];
@@ -466,7 +457,7 @@ class _ChatScreenState extends State<ChatScreen> {
       toName = chatName;
       toEmail = chatEmail;
       getMsgHist(chatEmail);
-      print("getMsgHist");
+      // print("getMsgHist");
     });
   }
 
@@ -481,9 +472,9 @@ class _ChatScreenState extends State<ChatScreen> {
       payload = {"pedido": "getDM", "email": emailAtual, "nome": emailOutro};
     }
 
-    print(payload);
+    // print(payload);
     var info = await toFromServer(payload);
-    print(info);
+    // print(info);
 
     if (info['members'].length > 0) {
       if (isGroup) {
@@ -748,7 +739,7 @@ class _ChatScreenState extends State<ChatScreen> {
             decoration: InputDecoration(isDense: true),
             onChanged: (String newGrupo) async {
               groupNameInit = newGrupo;
-              print(groupNameInit);
+              // print(groupNameInit);
             },
           ),
         ),
@@ -899,13 +890,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    Flexible(child: Text(
                       toName,
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF337d07)),
-                    ),
+                    )) ,
                     isAdmin
                         ? Visibility(
                             visible: isGroup,
@@ -984,8 +975,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (info["allUsers"]!.length > 1) {
       allUsersMap = info["allUsers"].cast<String, String>();
       for (String emailTemp in allUsersMap.keys) {
-        print(emailTemp + "a");
-        print(membersGrupoAtual);
         if (emailTemp != emailAtual && !membersGrupoAtual.contains(emailTemp)) {
           //
           setState(() {
@@ -1112,7 +1101,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   style: TextStyle(fontSize: 14),
                   onChanged: (String newMsg) async {
                     msg = newMsg;
-                    print(msg);
+                    // print(msg);
                   },
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
@@ -1187,6 +1176,8 @@ class _ChatScreenState extends State<ChatScreen> {
               side: BorderSide(color: Colors.black54, width: 3))),
       onPressed: () {
         downloadFile(emailAtual, fileName);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Arquivo salvo na pasta do executável")));
       },
     );
   }

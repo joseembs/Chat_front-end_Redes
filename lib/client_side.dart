@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 
 Future<Map<String, dynamic>> toFromServer(var jsonIn) async {
@@ -24,7 +23,6 @@ Future<Map<String, dynamic>> toFromServer(var jsonIn) async {
         var completeResponse = responseBuffer.toString().trim();
         var decodedResponse = jsonDecode(completeResponse);
         responseCompleter.complete(decodedResponse);
-        socket.destroy();
       }
 
     }, onDone: () {
@@ -52,6 +50,7 @@ Future<void> uploadFile(var payload, Function({bool isFile, String fileName}) la
     if (filePath != null) {
       final file = File(filePath);
       final fileName = file.uri.pathSegments.last;
+      print(fileName);
 
       payload["file"] = fileName;
 
@@ -83,70 +82,12 @@ Future<void> downloadFile(String userAtual, String fileName) async{
   var jsonStr = jsonEncode(payload) + "\n";
   socket.write(jsonStr);
 
-  print("f");
   await Future.delayed(Duration(seconds: 1));
-  print("g");
+
   Directory selfDir = Directory.current;
-  final receivedFile = File('${selfDir.path}/chat_client_files/$fileName'); //
-  print("h");
+  final receivedFile = File('${selfDir.path}/$fileName'); //
+
   await receivedFile.openWrite().addStream(socket);
   await socket.close();
+  print("arquivo recebido");
 }
-
-// Future<void> uploadFile(String filePath) async {
-//   final socket = await Socket.connect('localhost', 12345);
-//   final file = File(filePath);
-//
-//   // Enviar o nome do arquivo
-//   final filename = file.uri.pathSegments.last;
-//   socket.write(filename);
-//
-//   // Enviar o arquivo
-//   await Future.delayed(Duration(seconds: 1)); // Aguarde um momento antes de enviar o arquivo
-//   await file.openRead().pipe(socket);
-//
-//   // Receber o arquivo de volta
-//   final tempDir = await getTemporaryDirectory();
-//   final receivedFile = File('${tempDir.path}/$filename');
-//   await receivedFile.openWrite().addStream(socket);
-//
-//   print('Arquivo recebido: ${receivedFile.path}');
-//
-//   await socket.close();
-// }
-
-
-
-// var socket = await Socket.connect('127.0.0.1', sockNum);
-//
-//   var jsonString = jsonEncode(jsonIn);
-//   socket.write(jsonString);
-//
-//   var responseCompleter = Completer<Map<String, dynamic>>();
-//   socket.listen((List<int> received) {
-//     var response = utf8.decode(received);
-//     var decodedResponse = jsonDecode(response);
-//     //print(decodedResponse);
-//     responseCompleter.complete(decodedResponse);
-//   }, onDone: () {
-//     socket.destroy();
-//   }, onError: (error) {
-//     print("Erro: $error");
-//     responseCompleter.completeError(error);
-//   });
-//
-//     return responseCompleter.future;
-// }
-
-
-//   socket.listen((List<int> received) {
-//     var response = utf8.decode(received);
-//     var decodedResponse = jsonDecode(response);
-//     print(decodedResponse);
-//     print("a");
-//     socket.destroy();
-//     return decodedResponse;
-//   });
-//
-//   return {"error": "erro"};
-// }

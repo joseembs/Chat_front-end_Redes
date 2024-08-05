@@ -1,7 +1,7 @@
-import 'main2.dart';
 import 'package:flutter/material.dart';
 
-import 'API.dart';
+import 'main2.dart';
+import 'client_side.dart';
 
 class StartScreen extends StatelessWidget {
   const StartScreen({super.key});
@@ -68,7 +68,7 @@ Widget _cadastro(BuildContext contextIn) {
                 decoration: InputDecoration(isDense: true),
                 onChanged: (String newNome) async {
                   nomeSignIn = newNome;
-                  print(nomeSignIn);
+                  // print(nomeSignIn);
                 },
               ),
             ),
@@ -89,7 +89,7 @@ Widget _cadastro(BuildContext contextIn) {
                 decoration: InputDecoration(isDense: true),
                 onChanged: (String newEmail) async {
                   emailSignIn = newEmail;
-                  print(emailSignIn);
+                  // print(emailSignIn);
                 },
               ),
             ),
@@ -110,7 +110,7 @@ Widget _cadastro(BuildContext contextIn) {
                 decoration: InputDecoration(isDense: true),
                 onChanged: (String newLocal) async {
                   localSignIn = newLocal;
-                  print(localSignIn);
+                  // print(localSignIn);
                 },
               ),
             ),
@@ -160,7 +160,6 @@ Widget _cadastro(BuildContext contextIn) {
 }
 
 Widget _login(BuildContext contextIn) {
-  String nomeLogin = "";
   String emailLogin = "";
 
   return Container(
@@ -181,27 +180,6 @@ Widget _login(BuildContext contextIn) {
               color: Color(0xFF337d07)),
         ),
         const SizedBox(height: 20),
-        //Nome
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Nome de usuário:',
-            ),
-            Container(
-              margin: EdgeInsets.only(left: 10),
-              width: 270,
-              child: TextField(
-                decoration: InputDecoration(isDense: true),
-                onChanged: (String newNome) async {
-                  nomeLogin = newNome;
-                  print(nomeLogin);
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 25),
         //Email
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
