@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 
+String ip = '26.212.49.229'; // '127.0.0.1'
+
 Future<Map<String, dynamic>> toFromServer(var jsonIn) async {
   var responseCompleter = Completer<Map<String, dynamic>>();
 
   try {
-    var socket = await Socket.connect('127.0.0.1', 12345);
+    var socket = await Socket.connect(ip, 12345);
 
     var jsonStr = jsonEncode(jsonIn) + "\n";
     socket.write(jsonStr);
@@ -54,7 +56,7 @@ Future<void> uploadFile(var payload, Function({bool isFile, String fileName}) la
 
       payload["file"] = fileName;
 
-      var socket = await Socket.connect('127.0.0.1', 12345);
+      var socket = await Socket.connect(ip, 12345);
 
       var jsonStr = jsonEncode(payload) + "\n";
       socket.write(jsonStr); // envia o payload sem awaits
@@ -71,7 +73,7 @@ Future<void> uploadFile(var payload, Function({bool isFile, String fileName}) la
 }
 
 Future<void> downloadFile(String userAtual, String fileName) async{
-  var socket = await Socket.connect('127.0.0.1', 12345);
+  var socket = await Socket.connect(ip, 12345);
 
   var payload = {
     "pedido" : "downloadFile",

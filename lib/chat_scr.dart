@@ -572,7 +572,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     Flexible(
                       child: Container(
                         padding: EdgeInsets.all(6),
-                        decoration: BoxDecoration(color: Colors.green.shade300),
+                        decoration: BoxDecoration(color: Colors.green.shade300,
+                            borderRadius: const BorderRadius.all(Radius.circular(7)),),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
