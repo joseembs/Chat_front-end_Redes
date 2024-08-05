@@ -401,15 +401,15 @@ class _ChatScreenState extends State<ChatScreen> {
     // Prepara a lista de DMs e de CheckBoxes dos membros inicias de um grupo
     if (info["allUsers"]!.length > 1) {
       allUsersMap = info["allUsers"].cast<String, String>();
-      for (String nomeTemp in allUsersMap.values) {
-        if (nomeTemp != nomeAtual) {
+      for (String emailTemp in allUsersMap.keys) {
+        if (emailTemp != emailAtual) {
           setState(() {
             // Prepara a lista de DMs
             contactDmList
-                .add(_contactButton(allUsersMap[nomeTemp]!, nomeTemp, false));
+                .add(_contactButton(allUsersMap[emailTemp]!, emailTemp, false));
             // Já prepara a lista de CheckBoxes
             boolsToGroup.add(false);
-            initGroupUserBoxes.add(_checkBoxToGroup(nomeTemp, index, "add"));
+            initGroupUserBoxes.add(_checkBoxToGroup(allUsersMap[emailTemp]!, index, "add"));
             index++;
           });
         }
@@ -981,14 +981,14 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             // Lista de CheckBoxes
             boolsToGroup.add(false);
-            newGroupUserBoxes.add(_checkBoxToGroup(emailTemp, index, "add"));
+            newGroupUserBoxes.add(_checkBoxToGroup(allUsersMap[emailTemp]!, index, "add"));
             index++;
           });
         } else if (emailTemp != emailAtual) {
           setState(() {
             // Lista de CheckBoxes
             boolsToGroup.add(false);
-            oldGroupUserBoxes.add(_checkBoxToGroup(emailTemp, index, "remove"));
+            oldGroupUserBoxes.add(_checkBoxToGroup(allUsersMap[emailTemp]!, index, "remove"));
             index++;
           });
         }
