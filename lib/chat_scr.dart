@@ -409,7 +409,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 .add(_contactButton(allUsersMap[emailTemp]!, emailTemp, false));
             // Já prepara a lista de CheckBoxes
             boolsToGroup.add(false);
-            initGroupUserBoxes.add(_checkBoxToGroup(allUsersMap[emailTemp]!, index, "add"));
+            initGroupUserBoxes.add(_checkBoxToGroup(emailTemp, allUsersMap[emailTemp]!, index, "add"));
             index++;
           });
         }
@@ -611,7 +611,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Widget _checkBoxToGroup(String emailName, int index, String order) {
+  Widget _checkBoxToGroup(String emailName, String userName, int index, String order) {
     return Column(
       children: [
         Row(children: [
@@ -640,7 +640,7 @@ class _ChatScreenState extends State<ChatScreen> {
               );
             },
           ),
-          Text(emailName),
+          Text(userName),
         ]),
       ],
     );
@@ -981,14 +981,14 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             // Lista de CheckBoxes
             boolsToGroup.add(false);
-            newGroupUserBoxes.add(_checkBoxToGroup(allUsersMap[emailTemp]!, index, "add"));
+            newGroupUserBoxes.add(_checkBoxToGroup(emailTemp, allUsersMap[emailTemp]!, index, "add"));
             index++;
           });
         } else if (emailTemp != emailAtual) {
           setState(() {
             // Lista de CheckBoxes
             boolsToGroup.add(false);
-            oldGroupUserBoxes.add(_checkBoxToGroup(allUsersMap[emailTemp]!, index, "remove"));
+            oldGroupUserBoxes.add(_checkBoxToGroup(emailTemp, allUsersMap[emailTemp]!, index, "remove"));
             index++;
           });
         }
